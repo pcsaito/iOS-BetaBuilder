@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		1DDD58160DA1D0A300B32029 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DDD58140DA1D0A300B32029 /* MainMenu.xib */; };
 		256AC3DA0F4B6AC300CF3369 /* BetaBuilderAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 256AC3D90F4B6AC300CF3369 /* BetaBuilderAppDelegate.m */; };
+		3ABBE811126ABC6F00F4549C /* DragContentView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3ABBE810126ABC6F00F4549C /* DragContentView.m */; };
 		3AE2F5EF12693703000DCB74 /* DBAccountInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 3AE2F59A12693703000DCB74 /* DBAccountInfo.m */; };
 		3AE2F5F112693703000DCB74 /* DBError.m in Sources */ = {isa = PBXBuildFile; fileRef = 3AE2F59E12693703000DCB74 /* DBError.m */; };
 		3AE2F5F412693703000DCB74 /* DBMetadata.m in Sources */ = {isa = PBXBuildFile; fileRef = 3AE2F5A412693703000DCB74 /* DBMetadata.m */; };
@@ -77,6 +78,8 @@
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
+		3ABBE80F126ABC6F00F4549C /* DragContentView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DragContentView.h; sourceTree = "<group>"; };
+		3ABBE810126ABC6F00F4549C /* DragContentView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DragContentView.m; sourceTree = "<group>"; };
 		3AE2F59912693703000DCB74 /* DBAccountInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DBAccountInfo.h; sourceTree = "<group>"; };
 		3AE2F59A12693703000DCB74 /* DBAccountInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DBAccountInfo.m; sourceTree = "<group>"; };
 		3AE2F59D12693703000DCB74 /* DBError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DBError.h; sourceTree = "<group>"; };
@@ -200,6 +203,8 @@
 				256AC3D90F4B6AC300CF3369 /* BetaBuilderAppDelegate.m */,
 				5AA4E39B120DE13300385530 /* BuilderController.h */,
 				5AA4E39C120DE13300385530 /* BuilderController.m */,
+				3ABBE80F126ABC6F00F4549C /* DragContentView.h */,
+				3ABBE810126ABC6F00F4549C /* DragContentView.m */,
 			);
 			name = Classes;
 			sourceTree = "<group>";
@@ -532,6 +537,7 @@
 				3AE2F60D12693703000DCB74 /* NSURL+MPURLParameterAdditions.m in Sources */,
 				3AE2F60E12693703000DCB74 /* NSURLResponse+Encoding.m in Sources */,
 				3AE2F60F12693703000DCB74 /* NSString+Dropbox.m in Sources */,
+				3ABBE811126ABC6F00F4549C /* DragContentView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

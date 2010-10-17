@@ -210,7 +210,7 @@
 	[dateFormatter setDateFormat:@"yyyyMMddHHmm"];
 	NSString *nowString = [dateFormatter stringFromDate:now];
 	
-	NSString *folderURLString = [NSString stringWithFormat:@"http://dl.dropbox.com/u/%@/AdHoc/%@/%@", userId, nowString, [bundleNameField stringValue]];
+	NSString *folderURLString = [NSString stringWithFormat:@"http://dl.dropbox.com/u/%@/AdHoc/%@/%@", userId, [bundleNameField stringValue], nowString];
 	NSString *ipaURLString = [NSString stringWithFormat:@"%@/%@", folderURLString, encodedIpaFilename];
 	NSString *htmlURLString = [NSString stringWithFormat:@"%@/%@", folderURLString, [NSString stringWithFormat:@"%@.html", [bundleNameField stringValue]]];
 	NSDictionary *assetsDictionary = [NSDictionary dictionaryWithObjectsAndKeys:@"software-package", @"kind", ipaURLString, @"url", nil];
