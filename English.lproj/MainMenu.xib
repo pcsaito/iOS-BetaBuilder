@@ -12,9 +12,9 @@
 		</object>
 		<object class="NSMutableArray" key="IBDocument.EditedObjectIDs">
 			<bool key="EncodedWithXMLCoder">YES</bool>
-			<integer value="551"/>
 			<integer value="579"/>
 			<integer value="593"/>
+			<integer value="372"/>
 			<integer value="657"/>
 		</object>
 		<object class="NSArray" key="IBDocument.PluginDependencies">
@@ -28,7 +28,7 @@
 		<object class="NSMutableArray" key="IBDocument.RootObjects" id="1048">
 			<bool key="EncodedWithXMLCoder">YES</bool>
 			<object class="NSCustomObject" id="1021">
-				<string key="NSClassName">NSApplication</string>
+				<string key="NSClassName">DragContentView</string>
 			</object>
 			<object class="NSCustomObject" id="1014">
 				<string key="NSClassName">FirstResponder</string>
@@ -1318,7 +1318,7 @@
 				<string key="NSWindowRect">{{335, 262}, {306, 488}}</string>
 				<int key="NSWTFlags">1954021376</int>
 				<string key="NSWindowTitle">BetaBuilder</string>
-				<string key="NSWindowClass">NSWindow</string>
+				<string key="NSWindowClass">DragContentView</string>
 				<nil key="NSViewClass"/>
 				<string key="NSWindowContentMaxSize">{1.79769e+308, 1.79769e+308}</string>
 				<object class="NSView" key="NSWindowView" id="439893737">
@@ -1959,6 +1959,7 @@ eW91ciBjb21wdXRlcnMuCg</string>
 				<string key="NSWindowTitle">Window</string>
 				<string key="NSWindowClass">NSWindow</string>
 				<nil key="NSViewClass"/>
+				<string key="NSWindowContentMaxSize">{1.79769e+308, 1.79769e+308}</string>
 				<object class="NSView" key="NSWindowView" id="591537218">
 					<reference key="NSNextResponder"/>
 					<int key="NSvFlags">256</int>
@@ -2060,11 +2061,7 @@ eW91ciBjb21wdXRlcnMuCg</string>
 								<int key="NSCellFlags">-2080244224</int>
 								<int key="NSCellFlags2">134217728</int>
 								<string key="NSContents">OK</string>
-								<object class="NSFont" key="NSSupport">
-									<string key="NSName">LucidaGrande</string>
-									<double key="NSSize">12</double>
-									<int key="NSfFlags">4883</int>
-								</object>
+								<reference key="NSSupport" ref="756916247"/>
 								<reference key="NSControlView" ref="1043925061"/>
 								<int key="NSButtonFlags">-2038152961</int>
 								<int key="NSButtonFlags2">164</int>
@@ -2932,6 +2929,14 @@ eW91ciBjb21wdXRlcnMuCg</string>
 						<reference key="destination" ref="1043925061"/>
 					</object>
 					<int key="connectionID">680</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">builderController</string>
+						<reference key="source" ref="972006081"/>
+						<reference key="destination" ref="1033850965"/>
+					</object>
+					<int key="connectionID">681</int>
 				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
@@ -5230,7 +5235,7 @@ eW91ciBjb21wdXRlcnMuCg</string>
 				</object>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">680</int>
+			<int key="maxID">681</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -5482,6 +5487,25 @@ eW91ciBjb21wdXRlcnMuCg</string>
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
 						<string key="majorKey">IBProjectSource</string>
 						<string key="minorKey">BuilderController.h</string>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
+					<string key="className">DragContentView</string>
+					<string key="superclassName">NSWindow</string>
+					<object class="NSMutableDictionary" key="outlets">
+						<string key="NS.key.0">builderController</string>
+						<string key="NS.object.0">BuilderController</string>
+					</object>
+					<object class="NSMutableDictionary" key="toOneOutletInfosByName">
+						<string key="NS.key.0">builderController</string>
+						<object class="IBToOneOutletInfo" key="NS.object.0">
+							<string key="name">builderController</string>
+							<string key="candidateClassName">BuilderController</string>
+						</object>
+					</object>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">DragContentView.h</string>
 					</object>
 				</object>
 				<object class="IBPartialClassDescription">

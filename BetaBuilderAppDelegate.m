@@ -41,7 +41,6 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
 	// Insert code here to initialize your application 
-
 }
 
 - (IBAction)showDeploymentHelpPanel:(id)sender {
@@ -57,7 +56,10 @@
 }
 
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename {
-	[self.builderController setupFromIPAFile:filename];
+	if ([[filename lowercaseString] rangeOfString:@".ipa"].location != NSNotFound)
+		[self.builderController setupFromIPAFile:filename];
+	else if ([[filename lowercaseString] rangeOfString:@".app"].location != NSNotFound)
+		[self.builderController setupFromAPPFile:filename];
 	
 	return YES;
 }

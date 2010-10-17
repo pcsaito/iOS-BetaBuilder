@@ -9,6 +9,7 @@
 		<dict>
 			<key>CFBundleTypeExtensions</key>
 			<array>
+				<string>app</string>
 				<string>ipa</string>
 			</array>
 			<key>CFBundleTypeName</key>
