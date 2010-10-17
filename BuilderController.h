@@ -30,9 +30,10 @@
  */
 
 #import <Cocoa/Cocoa.h>
+@class ZipArchive;
+#import "DBRestClient.h"
 
-
-@interface BuilderController : NSObject {
+@interface BuilderController : NSObject <DBRestClientDelegate>{
 	NSTextField *bundleIdentifierField;
 	NSTextField *bundleVersionField;
 	NSTextField *bundleNameField;
@@ -40,8 +41,18 @@
 	NSTextField *archiveIPAFilenameField;
 	
 	NSButton *generateFilesButton;
+	IBOutlet NSButton *dbLinkButton;
+	IBOutlet NSButton *clipBoardChecker;
 	
+	IBOutlet NSWindow *dbLoginView; 
+	IBOutlet NSTextField *userNameTextField;
+	IBOutlet NSTextField *passNameTextField;
+
 	NSString *mobileProvisionFilePath;
+	
+	DBRestClient *restClient;
+	
+	NSString *clipBoardLink;
 }
 
 @property (nonatomic, retain) IBOutlet NSTextField *bundleIdentifierField;
@@ -56,7 +67,13 @@
 
 - (IBAction)specifyIPAFile:(id)sender;
 - (IBAction)generateFiles:(id)sender;
+- (IBAction)linkDropBox:(id)sender;
+- (IBAction)loginOkAction:(id)sender;
+- (void)noDBError;
+- (IBAction)copyToPasteBoard:(id)sender;
 
 - (void)setupFromIPAFile:(NSString *)ipaFilename;
+- (void)setupFromAPPFile:(NSString *)appFilename;
+- (BOOL)addFile:(NSString *)aFilePath recursivePath:(NSString *)aPath toZip:(ZipArchive *)aZipArchive;
 
 @end

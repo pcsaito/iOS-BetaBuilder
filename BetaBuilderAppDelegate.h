@@ -46,10 +46,10 @@
 
 @property (nonatomic, retain) IBOutlet NSPanel *deploymentHelpPanel;
 @property (nonatomic, retain) IBOutlet NSPanel *archiveIPAHelpPanel;
-
 @property (nonatomic, retain) IBOutlet BuilderController *builderController;
 
 - (IBAction)showDeploymentHelpPanel:(id)sender;
 - (IBAction)showArchiveHelpPanel:(id)sender;
+- (IBAction)openDBLink:(id)sender;
 
 @end

@@ -41,6 +41,7 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
 	// Insert code here to initialize your application 
+
 }
 
 - (IBAction)showDeploymentHelpPanel:(id)sender {
@@ -49,6 +50,10 @@
 
 - (IBAction)showArchiveHelpPanel:(id)sender {
 	[archiveIPAHelpPanel setIsVisible:YES];
+}
+
+- (IBAction)openDBLink:(id)sender {
+	[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"http://www.dropbox.com/referrals/NTE4MzQxMzU5"]];
 }
 
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename {
