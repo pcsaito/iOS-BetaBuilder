@@ -197,6 +197,9 @@
 - (IBAction)generateFiles:(id)sender {
 	NSFileManager *fileManager = [NSFileManager defaultManager];
 	BOOL success = YES;
+	
+	NSString *appNameString = [bundleNameField stringValue];
+	appNameString = [appNameString stringByReplacingOccurrencesOfString:@" " withString:@"_"];
 
 	//create plist
 	NSString *encodedIpaFilename = [[[archiveIPAFilenameField stringValue] lastPathComponent] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]; //this isn't the most robust way to do this
@@ -210,11 +213,11 @@
 	[dateFormatter setDateFormat:@"yyyyMMddHHmm"];
 	NSString *nowString = [dateFormatter stringFromDate:now];
 	
-	NSString *folderURLString = [NSString stringWithFormat:@"http://dl.dropbox.com/u/%@/AdHoc/%@/%@", userId, [bundleNameField stringValue], nowString];
+	NSString *folderURLString = [NSString stringWithFormat:@"http://dl.dropbox.com/u/%@/AdHoc/%@/%@", userId, appNameString, nowString];
 	NSString *ipaURLString = [NSString stringWithFormat:@"%@/%@", folderURLString, encodedIpaFilename];
-	NSString *htmlURLString = [NSString stringWithFormat:@"%@/%@", folderURLString, [NSString stringWithFormat:@"%@.html", [bundleNameField stringValue]]];
+	NSString *htmlURLString = [NSString stringWithFormat:@"%@/%@", folderURLString, [NSString stringWithFormat:@"%@.html", appNameString]];
 	NSDictionary *assetsDictionary = [NSDictionary dictionaryWithObjectsAndKeys:@"software-package", @"kind", ipaURLString, @"url", nil];
-	NSDictionary *metadataDictionary = [NSDictionary dictionaryWithObjectsAndKeys:[bundleIdentifierField stringValue], @"bundle-identifier", [bundleVersionField stringValue], @"bundle-version", @"software", @"kind", [bundleNameField stringValue], @"title", nil];
+	NSDictionary *metadataDictionary = [NSDictionary dictionaryWithObjectsAndKeys:[bundleIdentifierField stringValue], @"bundle-identifier", [bundleVersionField stringValue], @"bundle-version", @"software", @"kind", appNameString, @"title", nil];
 	NSDictionary *innerManifestDictionary = [NSDictionary dictionaryWithObjectsAndKeys:[NSArray arrayWithObject:assetsDictionary], @"assets", metadataDictionary, @"metadata", nil];
 	NSDictionary *outerManifestDictionary = [NSDictionary dictionaryWithObjectsAndKeys:[NSArray arrayWithObject:innerManifestDictionary], @"items", nil];
 	NSLog(@"Manifest Created");
@@ -222,18 +225,18 @@
 	//create html file
 	NSString *templatePath = [[NSBundle mainBundle] pathForResource:@"index_template" ofType:@"html"];
 	NSString *htmlTemplateString = [NSString stringWithContentsOfFile:templatePath encoding:NSUTF8StringEncoding error:nil];
-	htmlTemplateString = [htmlTemplateString stringByReplacingOccurrencesOfString:@"[BETA_NAME]" withString:[bundleNameField stringValue]];
+	htmlTemplateString = [htmlTemplateString stringByReplacingOccurrencesOfString:@"[BETA_NAME]" withString:appNameString];
 	htmlTemplateString = [htmlTemplateString stringByReplacingOccurrencesOfString:@"[BETA_PLIST]" withString:[NSString stringWithFormat:@"%@/%@", folderURLString, @"manifest.plist"]];
 	htmlTemplateString = [htmlTemplateString stringByReplacingOccurrencesOfString:@"[PROVISIONING]" withString:[NSString stringWithFormat:@"%@/%@", folderURLString, @"provisioning.mobileprovision"]];
-	htmlTemplateString = [htmlTemplateString stringByReplacingOccurrencesOfString:@"[ZIP_NAME]" withString:[NSString stringWithFormat:@"%@.zip", [bundleNameField stringValue]]];
+	htmlTemplateString = [htmlTemplateString stringByReplacingOccurrencesOfString:@"[ZIP_NAME]" withString:[NSString stringWithFormat:@"%@.zip", appNameString]];
 	
-	NSString *savePath = [NSHomeDirectory() stringByAppendingFormat:@"/Dropbox/Public/AdHoc/%@/%@", [bundleNameField stringValue], nowString];
+	NSString *savePath = [NSHomeDirectory() stringByAppendingFormat:@"/Dropbox/Public/AdHoc/%@/%@", appNameString, nowString];
 	NSURL *saveDirectoryURL = [NSURL fileURLWithPath:savePath];
 	[fileManager createDirectoryAtPath:savePath withIntermediateDirectories:YES attributes:nil error:nil];
 	
 	//Write Files
 	[outerManifestDictionary writeToURL:[saveDirectoryURL URLByAppendingPathComponent:@"manifest.plist"] atomically:YES];
-	[htmlTemplateString writeToURL:[saveDirectoryURL URLByAppendingPathComponent:[NSString stringWithFormat:@"%@.html", [bundleNameField stringValue]]] atomically:YES encoding:NSASCIIStringEncoding error:nil];
+	[htmlTemplateString writeToURL:[saveDirectoryURL URLByAppendingPathComponent:[NSString stringWithFormat:@"%@.html", appNameString]] atomically:YES encoding:NSASCIIStringEncoding error:nil];
 	
 	//Copy IPA
 	NSError *fileCopyError;
@@ -252,7 +255,7 @@
 		
 	//Create Archived Version for 3.0 Apps
 	ZipArchive* zip = [[ZipArchive alloc] init];
-	BOOL ret = [zip CreateZipFile2:[[saveDirectoryURL path] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.zip", [bundleNameField stringValue]]]];
+	BOOL ret = [zip CreateZipFile2:[[saveDirectoryURL path] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.zip", appNameString]]];
 	ret = [zip addFileToZip:[archiveIPAFilenameField stringValue] newname:@"application.ipa"];
 	ret = [zip addFileToZip:mobileProvisionFilePath newname:@"beta_provision.mobileprovision"];
 	if(![zip CloseZipFile2]) {

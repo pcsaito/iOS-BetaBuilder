@@ -278,7 +278,9 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>34</integer>
+									<integer>7</integer>
+									<integer>1</integer>
+									<integer>0</integer>
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
@@ -317,7 +319,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>3AE2F59012693550000DCB74</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>DragContentView.m</string>
+								<string>BuilderController.m</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -325,11 +327,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>3AE2F59112693550000DCB74</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>DragContentView.m</string>
+										<string>BuilderController.m</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>3ABBE9C6126C90BC00F4549C</string>
+										<string>3ABBEE98126CC41D00F4549C</string>
 										<key>history</key>
 										<array>
 											<string>3AE784EB126A1B16009D21C9</string>
@@ -345,15 +347,15 @@
 											<string>3AE7877E126A7FCC009D21C9</string>
 											<string>3AE787AA126A92A0009D21C9</string>
 											<string>3AE787DC126A9B5F009D21C9</string>
-											<string>3AE787E1126A9B70009D21C9</string>
 											<string>3ABBE7B4126AB85D00F4549C</string>
 											<string>3ABBE7B7126AB85D00F4549C</string>
 											<string>3ABBE849126AC02900F4549C</string>
-											<string>3ABBE88A126AC24400F4549C</string>
 											<string>3ABBE921126C89D300F4549C</string>
 											<string>3ABBE922126C89D300F4549C</string>
-											<string>3ABBE9C4126C90BC00F4549C</string>
-											<string>3ABBE9C5126C90BC00F4549C</string>
+											<string>3ABBEE94126CC41D00F4549C</string>
+											<string>3ABBEE95126CC41D00F4549C</string>
+											<string>3ABBEE96126CC41D00F4549C</string>
+											<string>3ABBEE97126CC41D00F4549C</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -671,7 +673,7 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
-		<string>3ABBE9C7126C90BC00F4549C</string>
+		<string>3ABBEE99126CC41D00F4549C</string>
 		<string>3ABBE92C126C89D300F4549C</string>
 		<string>3ABBE92D126C89D300F4549C</string>
 		<string>/Users/paulo/Projects/Pessoal/iOS-BetaBuilder/BetaBuilder.xcodeproj</string>
