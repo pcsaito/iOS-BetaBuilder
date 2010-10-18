@@ -296,6 +296,9 @@
 		[alert beginSheetModalForWindow:[[NSApplication sharedApplication] mainWindow] modalDelegate:nil didEndSelector:nil contextInfo:nil];
 		[dbLinkButton setTitle:@"Link"];
 		[[NSUserDefaults standardUserDefaults] setObject:@"" forKey:@"userID"];
+		
+		[accountNameTextField setStringValue:@""];
+		[quotaTextField setStringValue:@""];		
 	}
 }
 
@@ -353,6 +356,12 @@
 
 - (void) restClient:(DBRestClient *)client loadedAccountInfo:(DBAccountInfo *)info {	
 	[[NSUserDefaults standardUserDefaults] setObject:[info userId] forKey:@"userID"];
+	[accountNameTextField setStringValue:[info displayName]];
+	long long int quotaSize = [[info quota] totalBytes];
+	double quotaSizeFloat = (float)quotaSize/1024.0/1024.0/1024.0;
+	long long int consumedQuotaSize = (long long int)[[info quota] normalConsumedBytes]+(long long int)[[info quota] sharedConsumedBytes];
+	double consumedQuotaSizeFloat = (float)consumedQuotaSize/1024.0/1024.0/1024.0;
+	[quotaTextField setStringValue:[NSString stringWithFormat:@"%.2lfGB/%.2lfGB", consumedQuotaSizeFloat, quotaSizeFloat]];
 }
 
 

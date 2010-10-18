@@ -47,6 +47,8 @@
 	IBOutlet NSWindow *dbLoginView; 
 	IBOutlet NSTextField *userNameTextField;
 	IBOutlet NSTextField *passNameTextField;
+	IBOutlet NSTextField *accountNameTextField;
+	IBOutlet NSTextField *quotaTextField;
 
 	NSString *mobileProvisionFilePath;
 	
