@@ -230,16 +230,39 @@
 	htmlTemplateString = [htmlTemplateString stringByReplacingOccurrencesOfString:@"[PROVISIONING]" withString:[NSString stringWithFormat:@"%@/%@", folderURLString, @"provisioning.mobileprovision"]];
 	htmlTemplateString = [htmlTemplateString stringByReplacingOccurrencesOfString:@"[ZIP_NAME]" withString:[NSString stringWithFormat:@"%@.zip", appNameString]];
 	
+	//Create Archived Version for 3.0 Apps
+	ZipArchive* zip = [[ZipArchive alloc] init];
+	NSString *tempZipPath = [NSTemporaryDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.zip", appNameString]];
+	[fileManager removeItemAtPath:tempZipPath error:nil];
+	BOOL ret = [zip CreateZipFile2:tempZipPath];
+	ret = [zip addFileToZip:[archiveIPAFilenameField stringValue] newname:[NSString stringWithFormat:@"%@.ipa", appNameString]];
+	ret = [zip addFileToZip:mobileProvisionFilePath newname:@"provisioning.mobileprovision"];
+	if(![zip CloseZipFile2]) {
+		NSLog(@"Error Creating 3.x Zip File");
+		success = NO;
+	}
+	[zip release];
+	
+	
 	NSString *savePath = [NSHomeDirectory() stringByAppendingFormat:@"/Dropbox/Public/AdHoc/%@/%@", appNameString, nowString];
 	NSURL *saveDirectoryURL = [NSURL fileURLWithPath:savePath];
 	[fileManager createDirectoryAtPath:savePath withIntermediateDirectories:YES attributes:nil error:nil];
+	NSError *fileCopyError;
+	
+	//copy zip
+	NSURL *zipDestURL = [NSURL fileURLWithPath:[[saveDirectoryURL path] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.zip", appNameString]]];
+	NSURL *zipSourceURL = [NSURL fileURLWithPath:tempZipPath];
+	BOOL copiedZIPFile = [fileManager copyItemAtURL:zipSourceURL toURL:zipDestURL error:&fileCopyError];
+	if (!copiedZIPFile) {
+		NSLog(@"Error Copying ZIP File: %@", fileCopyError);
+		success = NO;
+	}		
 	
 	//Write Files
 	[outerManifestDictionary writeToURL:[saveDirectoryURL URLByAppendingPathComponent:@"manifest.plist"] atomically:YES];
 	[htmlTemplateString writeToURL:[saveDirectoryURL URLByAppendingPathComponent:[NSString stringWithFormat:@"%@.html", appNameString]] atomically:YES encoding:NSASCIIStringEncoding error:nil];
 	
 	//Copy IPA
-	NSError *fileCopyError;
 	NSURL *ipaSourceURL = [NSURL fileURLWithPath:[archiveIPAFilenameField stringValue]];
 	NSURL *ipaDestinationURL = [saveDirectoryURL URLByAppendingPathComponent:[[archiveIPAFilenameField stringValue] lastPathComponent]];
 	BOOL copiedIPAFile = [fileManager copyItemAtURL:ipaSourceURL toURL:ipaDestinationURL error:&fileCopyError];
@@ -252,17 +275,7 @@
 		NSLog(@"Error Copying Prov File: %@", fileCopyError);
 		success = NO;
 	}
-		
-	//Create Archived Version for 3.0 Apps
-	ZipArchive* zip = [[ZipArchive alloc] init];
-	BOOL ret = [zip CreateZipFile2:[[saveDirectoryURL path] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.zip", appNameString]]];
-	ret = [zip addFileToZip:[archiveIPAFilenameField stringValue] newname:@"application.ipa"];
-	ret = [zip addFileToZip:mobileProvisionFilePath newname:@"beta_provision.mobileprovision"];
-	if(![zip CloseZipFile2]) {
-		NSLog(@"Error Creating 3.x Zip File");
-		success = NO;
-	}
-	[zip release];
+
 	
 	if (success) {
 		//Play Done Sound / Display Alert
@@ -287,7 +300,7 @@
 - (void)noDBError {
 	NSAlert *alert = [NSAlert alertWithMessageText:@"No Account Linked!" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@"Please link a Dropbox Account!"];
 	[alert beginSheetModalForWindow:[[NSApplication sharedApplication] mainWindow] modalDelegate:nil didEndSelector:nil contextInfo:nil];
-
+	
 }
 
 - (IBAction)linkDropBox:(id)sender {
@@ -309,6 +322,14 @@
 	NSString *userNameString = [userNameTextField stringValue];
 	NSString *passwordString = [passNameTextField stringValue];
 	
+	if (![sameAccountChecker state]) {
+		[[NSApplication sharedApplication] endSheet:dbLoginView];
+		[dbLoginView close];
+
+		NSAlert *alert = [NSAlert alertWithMessageText:@"You must use the same account!" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@"The App only use your account information to generate the public links, but is the desktop client that upload your files! If diferent accounts are used, the public links will be wrong!"];
+		[alert beginSheetModalForWindow:[[NSApplication sharedApplication] mainWindow] modalDelegate:nil didEndSelector:nil contextInfo:nil];
+	}
+	
 	if (userNameString && passwordString && ![userNameString isEqualToString:@""] && ![passwordString isEqualToString:@""]) {
 		[restClient loginWithEmail:userNameString password:passwordString];
 		[[NSApplication sharedApplication] endSheet:dbLoginView];
@@ -327,13 +348,28 @@
 #pragma mark DBRestClient methods
 
 - (void)restClientDidLogin:(DBRestClient*)client {
-	NSAlert *alert = [NSAlert alertWithMessageText:@"Account Linked!" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@"Your dropbox account has been linked"];
-	[alert beginSheetModalForWindow:[[NSApplication sharedApplication] mainWindow] modalDelegate:nil didEndSelector:nil contextInfo:nil];
-
-	[dbLinkButton setTitle:@"Unlink"];
-	[client loadAccountInfo];
+	NSFileManager *fileManager = [NSFileManager defaultManager];
+	NSString *dbPath = [NSHomeDirectory() stringByAppendingFormat:@"/Dropbox"];
+	BOOL dbFolderIsFolder;
+	BOOL dbFolderExist = [fileManager fileExistsAtPath:dbPath isDirectory:&dbFolderIsFolder];
+	if (!dbFolderExist || !dbFolderIsFolder) {
+		[[DBSession sharedSession] unlink];
+		NSAlert *alert = [NSAlert alertWithMessageText:@"Cannot find the Dropbox folder!" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@"Your Dropbox does not exists, or is not located in the default location."];
+		[alert beginSheetModalForWindow:[[NSApplication sharedApplication] mainWindow] modalDelegate:nil didEndSelector:nil contextInfo:nil];
+		[dbLinkButton setTitle:@"Link"];
+		[[NSUserDefaults standardUserDefaults] setObject:@"" forKey:@"userID"];
+		
+		[accountNameTextField setStringValue:@""];
+		[quotaTextField setStringValue:@""];		
+		
+	} else {
+		NSAlert *alert = [NSAlert alertWithMessageText:@"Account Linked!" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@"Your dropbox account has been linked"];
+		[alert beginSheetModalForWindow:[[NSApplication sharedApplication] mainWindow] modalDelegate:nil didEndSelector:nil contextInfo:nil];
+		
+		[dbLinkButton setTitle:@"Unlink"];
+		[client loadAccountInfo];
+	}
 }
-
 
 - (void)restClient:(DBRestClient*)client loginFailedWithError:(NSError*)error {
 	NSAlert *alert = [NSAlert alertWithMessageText:@"Account Not Linked!" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@"Your dropbox account cannot be linked"];
@@ -354,7 +390,7 @@
             message = @"An unknown error has occurred.";
         }
     }
-    NSLog(message);
+    NSLog(@"%@",message);
 }
 
 - (void) restClient:(DBRestClient *)client loadedAccountInfo:(DBAccountInfo *)info {	

@@ -49,6 +49,8 @@
 	IBOutlet NSTextField *passNameTextField;
 	IBOutlet NSTextField *accountNameTextField;
 	IBOutlet NSTextField *quotaTextField;
+	IBOutlet NSButton *sameAccountChecker;
+
 
 	NSString *mobileProvisionFilePath;
 	
