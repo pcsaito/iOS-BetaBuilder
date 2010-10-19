@@ -197,6 +197,9 @@
 - (IBAction)generateFiles:(id)sender {
 	NSFileManager *fileManager = [NSFileManager defaultManager];
 	BOOL success = YES;
+	
+	NSString *appNameString = [bundleNameField stringValue];
+	appNameString = [appNameString stringByReplacingOccurrencesOfString:@" " withString:@"_"];
 
 	//create plist
 	NSString *encodedIpaFilename = [[[archiveIPAFilenameField stringValue] lastPathComponent] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]; //this isn't the most robust way to do this
@@ -210,11 +213,11 @@
 	[dateFormatter setDateFormat:@"yyyyMMddHHmm"];
 	NSString *nowString = [dateFormatter stringFromDate:now];
 	
-	NSString *folderURLString = [NSString stringWithFormat:@"http://dl.dropbox.com/u/%@/AdHoc/%@/%@", userId, [bundleNameField stringValue], nowString];
+	NSString *folderURLString = [NSString stringWithFormat:@"http://dl.dropbox.com/u/%@/AdHoc/%@/%@", userId, appNameString, nowString];
 	NSString *ipaURLString = [NSString stringWithFormat:@"%@/%@", folderURLString, encodedIpaFilename];
-	NSString *htmlURLString = [NSString stringWithFormat:@"%@/%@", folderURLString, [NSString stringWithFormat:@"%@.html", [bundleNameField stringValue]]];
+	NSString *htmlURLString = [NSString stringWithFormat:@"%@/%@", folderURLString, [NSString stringWithFormat:@"%@.html", appNameString]];
 	NSDictionary *assetsDictionary = [NSDictionary dictionaryWithObjectsAndKeys:@"software-package", @"kind", ipaURLString, @"url", nil];
-	NSDictionary *metadataDictionary = [NSDictionary dictionaryWithObjectsAndKeys:[bundleIdentifierField stringValue], @"bundle-identifier", [bundleVersionField stringValue], @"bundle-version", @"software", @"kind", [bundleNameField stringValue], @"title", nil];
+	NSDictionary *metadataDictionary = [NSDictionary dictionaryWithObjectsAndKeys:[bundleIdentifierField stringValue], @"bundle-identifier", [bundleVersionField stringValue], @"bundle-version", @"software", @"kind", appNameString, @"title", nil];
 	NSDictionary *innerManifestDictionary = [NSDictionary dictionaryWithObjectsAndKeys:[NSArray arrayWithObject:assetsDictionary], @"assets", metadataDictionary, @"metadata", nil];
 	NSDictionary *outerManifestDictionary = [NSDictionary dictionaryWithObjectsAndKeys:[NSArray arrayWithObject:innerManifestDictionary], @"items", nil];
 	NSLog(@"Manifest Created");
@@ -222,21 +225,44 @@
 	//create html file
 	NSString *templatePath = [[NSBundle mainBundle] pathForResource:@"index_template" ofType:@"html"];
 	NSString *htmlTemplateString = [NSString stringWithContentsOfFile:templatePath encoding:NSUTF8StringEncoding error:nil];
-	htmlTemplateString = [htmlTemplateString stringByReplacingOccurrencesOfString:@"[BETA_NAME]" withString:[bundleNameField stringValue]];
+	htmlTemplateString = [htmlTemplateString stringByReplacingOccurrencesOfString:@"[BETA_NAME]" withString:appNameString];
 	htmlTemplateString = [htmlTemplateString stringByReplacingOccurrencesOfString:@"[BETA_PLIST]" withString:[NSString stringWithFormat:@"%@/%@", folderURLString, @"manifest.plist"]];
 	htmlTemplateString = [htmlTemplateString stringByReplacingOccurrencesOfString:@"[PROVISIONING]" withString:[NSString stringWithFormat:@"%@/%@", folderURLString, @"provisioning.mobileprovision"]];
-	htmlTemplateString = [htmlTemplateString stringByReplacingOccurrencesOfString:@"[ZIP_NAME]" withString:[NSString stringWithFormat:@"%@.zip", [bundleNameField stringValue]]];
+	htmlTemplateString = [htmlTemplateString stringByReplacingOccurrencesOfString:@"[ZIP_NAME]" withString:[NSString stringWithFormat:@"%@.zip", appNameString]];
 	
-	NSString *savePath = [NSHomeDirectory() stringByAppendingFormat:@"/Dropbox/Public/AdHoc/%@/%@", [bundleNameField stringValue], nowString];
+	//Create Archived Version for 3.0 Apps
+	ZipArchive* zip = [[ZipArchive alloc] init];
+	NSString *tempZipPath = [NSTemporaryDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.zip", appNameString]];
+	[fileManager removeItemAtPath:tempZipPath error:nil];
+	BOOL ret = [zip CreateZipFile2:tempZipPath];
+	ret = [zip addFileToZip:[archiveIPAFilenameField stringValue] newname:[NSString stringWithFormat:@"%@.ipa", appNameString]];
+	ret = [zip addFileToZip:mobileProvisionFilePath newname:@"provisioning.mobileprovision"];
+	if(![zip CloseZipFile2]) {
+		NSLog(@"Error Creating 3.x Zip File");
+		success = NO;
+	}
+	[zip release];
+	
+	
+	NSString *savePath = [NSHomeDirectory() stringByAppendingFormat:@"/Dropbox/Public/AdHoc/%@/%@", appNameString, nowString];
 	NSURL *saveDirectoryURL = [NSURL fileURLWithPath:savePath];
 	[fileManager createDirectoryAtPath:savePath withIntermediateDirectories:YES attributes:nil error:nil];
+	NSError *fileCopyError;
+	
+	//copy zip
+	NSURL *zipDestURL = [NSURL fileURLWithPath:[[saveDirectoryURL path] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.zip", appNameString]]];
+	NSURL *zipSourceURL = [NSURL fileURLWithPath:tempZipPath];
+	BOOL copiedZIPFile = [fileManager copyItemAtURL:zipSourceURL toURL:zipDestURL error:&fileCopyError];
+	if (!copiedZIPFile) {
+		NSLog(@"Error Copying ZIP File: %@", fileCopyError);
+		success = NO;
+	}		
 	
 	//Write Files
 	[outerManifestDictionary writeToURL:[saveDirectoryURL URLByAppendingPathComponent:@"manifest.plist"] atomically:YES];
-	[htmlTemplateString writeToURL:[saveDirectoryURL URLByAppendingPathComponent:[NSString stringWithFormat:@"%@.html", [bundleNameField stringValue]]] atomically:YES encoding:NSASCIIStringEncoding error:nil];
+	[htmlTemplateString writeToURL:[saveDirectoryURL URLByAppendingPathComponent:[NSString stringWithFormat:@"%@.html", appNameString]] atomically:YES encoding:NSASCIIStringEncoding error:nil];
 	
 	//Copy IPA
-	NSError *fileCopyError;
 	NSURL *ipaSourceURL = [NSURL fileURLWithPath:[archiveIPAFilenameField stringValue]];
 	NSURL *ipaDestinationURL = [saveDirectoryURL URLByAppendingPathComponent:[[archiveIPAFilenameField stringValue] lastPathComponent]];
 	BOOL copiedIPAFile = [fileManager copyItemAtURL:ipaSourceURL toURL:ipaDestinationURL error:&fileCopyError];
@@ -249,17 +275,7 @@
 		NSLog(@"Error Copying Prov File: %@", fileCopyError);
 		success = NO;
 	}
-		
-	//Create Archived Version for 3.0 Apps
-	ZipArchive* zip = [[ZipArchive alloc] init];
-	BOOL ret = [zip CreateZipFile2:[[saveDirectoryURL path] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.zip", [bundleNameField stringValue]]]];
-	ret = [zip addFileToZip:[archiveIPAFilenameField stringValue] newname:@"application.ipa"];
-	ret = [zip addFileToZip:mobileProvisionFilePath newname:@"beta_provision.mobileprovision"];
-	if(![zip CloseZipFile2]) {
-		NSLog(@"Error Creating 3.x Zip File");
-		success = NO;
-	}
-	[zip release];
+
 	
 	if (success) {
 		//Play Done Sound / Display Alert
@@ -284,7 +300,7 @@
 - (void)noDBError {
 	NSAlert *alert = [NSAlert alertWithMessageText:@"No Account Linked!" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@"Please link a Dropbox Account!"];
 	[alert beginSheetModalForWindow:[[NSApplication sharedApplication] mainWindow] modalDelegate:nil didEndSelector:nil contextInfo:nil];
-
+	
 }
 
 - (IBAction)linkDropBox:(id)sender {
@@ -296,12 +312,23 @@
 		[alert beginSheetModalForWindow:[[NSApplication sharedApplication] mainWindow] modalDelegate:nil didEndSelector:nil contextInfo:nil];
 		[dbLinkButton setTitle:@"Link"];
 		[[NSUserDefaults standardUserDefaults] setObject:@"" forKey:@"userID"];
+		
+		[accountNameTextField setStringValue:@""];
+		[quotaTextField setStringValue:@""];		
 	}
 }
 
 - (void)loginOkAction:(id)sender {
 	NSString *userNameString = [userNameTextField stringValue];
 	NSString *passwordString = [passNameTextField stringValue];
+	
+	if (![sameAccountChecker state]) {
+		[[NSApplication sharedApplication] endSheet:dbLoginView];
+		[dbLoginView close];
+
+		NSAlert *alert = [NSAlert alertWithMessageText:@"You must use the same account!" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@"The App only use your account information to generate the public links, but is the desktop client that upload your files! If diferent accounts are used, the public links will be wrong!"];
+		[alert beginSheetModalForWindow:[[NSApplication sharedApplication] mainWindow] modalDelegate:nil didEndSelector:nil contextInfo:nil];
+	}
 	
 	if (userNameString && passwordString && ![userNameString isEqualToString:@""] && ![passwordString isEqualToString:@""]) {
 		[restClient loginWithEmail:userNameString password:passwordString];
@@ -321,13 +348,28 @@
 #pragma mark DBRestClient methods
 
 - (void)restClientDidLogin:(DBRestClient*)client {
-	NSAlert *alert = [NSAlert alertWithMessageText:@"Account Linked!" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@"Your dropbox account has been linked"];
-	[alert beginSheetModalForWindow:[[NSApplication sharedApplication] mainWindow] modalDelegate:nil didEndSelector:nil contextInfo:nil];
-
-	[dbLinkButton setTitle:@"Unlink"];
-	[client loadAccountInfo];
+	NSFileManager *fileManager = [NSFileManager defaultManager];
+	NSString *dbPath = [NSHomeDirectory() stringByAppendingFormat:@"/Dropbox"];
+	BOOL dbFolderIsFolder;
+	BOOL dbFolderExist = [fileManager fileExistsAtPath:dbPath isDirectory:&dbFolderIsFolder];
+	if (!dbFolderExist || !dbFolderIsFolder) {
+		[[DBSession sharedSession] unlink];
+		NSAlert *alert = [NSAlert alertWithMessageText:@"Cannot find the Dropbox folder!" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@"Your Dropbox does not exists, or is not located in the default location."];
+		[alert beginSheetModalForWindow:[[NSApplication sharedApplication] mainWindow] modalDelegate:nil didEndSelector:nil contextInfo:nil];
+		[dbLinkButton setTitle:@"Link"];
+		[[NSUserDefaults standardUserDefaults] setObject:@"" forKey:@"userID"];
+		
+		[accountNameTextField setStringValue:@""];
+		[quotaTextField setStringValue:@""];		
+		
+	} else {
+		NSAlert *alert = [NSAlert alertWithMessageText:@"Account Linked!" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@"Your dropbox account has been linked"];
+		[alert beginSheetModalForWindow:[[NSApplication sharedApplication] mainWindow] modalDelegate:nil didEndSelector:nil contextInfo:nil];
+		
+		[dbLinkButton setTitle:@"Unlink"];
+		[client loadAccountInfo];
+	}
 }
-
 
 - (void)restClient:(DBRestClient*)client loginFailedWithError:(NSError*)error {
 	NSAlert *alert = [NSAlert alertWithMessageText:@"Account Not Linked!" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@"Your dropbox account cannot be linked"];
@@ -348,11 +390,17 @@
             message = @"An unknown error has occurred.";
         }
     }
-    NSLog(message);
+    NSLog(@"%@",message);
 }
 
 - (void) restClient:(DBRestClient *)client loadedAccountInfo:(DBAccountInfo *)info {	
 	[[NSUserDefaults standardUserDefaults] setObject:[info userId] forKey:@"userID"];
+	[accountNameTextField setStringValue:[info displayName]];
+	long long int quotaSize = [[info quota] totalBytes];
+	double quotaSizeFloat = (float)quotaSize/1024.0/1024.0/1024.0;
+	long long int consumedQuotaSize = (long long int)[[info quota] normalConsumedBytes]+(long long int)[[info quota] sharedConsumedBytes];
+	double consumedQuotaSizeFloat = (float)consumedQuotaSize/1024.0/1024.0/1024.0;
+	[quotaTextField setStringValue:[NSString stringWithFormat:@"%.2lfGB/%.2lfGB", consumedQuotaSizeFloat, quotaSizeFloat]];
 }
 
 
