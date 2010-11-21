@@ -52,6 +52,7 @@
 		3AE2F61912693703000DCB74 /* db_logo.png in Resources */ = {isa = PBXBuildFile; fileRef = 3AE2F5ED12693703000DCB74 /* db_logo.png */; };
 		3AE2F61A12693703000DCB74 /* db_logo@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 3AE2F5EE12693703000DCB74 /* db_logo@2x.png */; };
 		3AE2F64A126938F2000DCB74 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3AE2F649126938F2000DCB74 /* Security.framework */; };
+		3AEEF3891299C5A200F8B6F8 /* NSString+Lossy.m in Sources */ = {isa = PBXBuildFile; fileRef = 3AEEF3881299C5A200F8B6F8 /* NSString+Lossy.m */; };
 		5A23434A1211AB1F0098AAB8 /* ioapi.c in Sources */ = {isa = PBXBuildFile; fileRef = 5A2343401211AB1F0098AAB8 /* ioapi.c */; };
 		5A23434B1211AB1F0098AAB8 /* mztools.c in Sources */ = {isa = PBXBuildFile; fileRef = 5A2343421211AB1F0098AAB8 /* mztools.c */; };
 		5A23434C1211AB1F0098AAB8 /* unzip.c in Sources */ = {isa = PBXBuildFile; fileRef = 5A2343441211AB1F0098AAB8 /* unzip.c */; };
@@ -159,6 +160,8 @@
 		3AE2F62E12693831000DCB74 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		3AE2F63212693837000DCB74 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		3AE2F649126938F2000DCB74 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		3AEEF3871299C5A200F8B6F8 /* NSString+Lossy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+Lossy.h"; sourceTree = "<group>"; };
+		3AEEF3881299C5A200F8B6F8 /* NSString+Lossy.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+Lossy.m"; sourceTree = "<group>"; };
 		5A23433F1211AB1F0098AAB8 /* crypt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = crypt.h; sourceTree = "<group>"; };
 		5A2343401211AB1F0098AAB8 /* ioapi.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ioapi.c; sourceTree = "<group>"; };
 		5A2343411211AB1F0098AAB8 /* ioapi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ioapi.h; sourceTree = "<group>"; };
@@ -197,6 +200,8 @@
 		080E96DDFE201D6D7F000001 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				3AEEF3871299C5A200F8B6F8 /* NSString+Lossy.h */,
+				3AEEF3881299C5A200F8B6F8 /* NSString+Lossy.m */,
 				3AE2F59812693703000DCB74 /* DropboxSDK */,
 				5A23433D1211AB1F0098AAB8 /* ZipArchive */,
 				256AC3D80F4B6AC300CF3369 /* BetaBuilderAppDelegate.h */,
@@ -538,6 +543,7 @@
 				3AE2F60E12693703000DCB74 /* NSURLResponse+Encoding.m in Sources */,
 				3AE2F60F12693703000DCB74 /* NSString+Dropbox.m in Sources */,
 				3ABBE811126ABC6F00F4549C /* DragContentView.m in Sources */,
+				3AEEF3891299C5A200F8B6F8 /* NSString+Lossy.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
