@@ -198,7 +198,7 @@
 	NSFileManager *fileManager = [NSFileManager defaultManager];
 	BOOL success = YES;
 	
-	NSString *appNameString = [bundleNameField stringValue];
+	NSString *appNameString = [[bundleNameField stringValue] lossyString];
 	appNameString = [appNameString stringByReplacingOccurrencesOfString:@" " withString:@"_"];
 
 	//create plist
