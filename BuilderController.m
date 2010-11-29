@@ -33,6 +33,9 @@
 #import "ZipArchive.h"
 #import "DBSession.h"
 
+#define kiOSLessThan4Key @"iOSLessThan4"
+#define kiOSLessThan4HTMLToken @"DISPLAY_IOS_LESS_THAN_4"
+
 @implementation BuilderController
 
 @synthesize bundleIdentifierField;
@@ -64,6 +67,8 @@
 - (void) awakeFromNib {
 	if ([[DBSession sharedSession] isLinked])
 	[dbLinkButton setTitle:@"Unlink"];
+  
+  [iOSLessThan4Checker setState:[[NSUserDefaults standardUserDefaults] boolForKey:kiOSLessThan4Key] ? NSOnState : NSOffState];
 }
 
 - (IBAction)specifyIPAFile:(id)sender {
@@ -221,6 +226,8 @@
 	NSDictionary *innerManifestDictionary = [NSDictionary dictionaryWithObjectsAndKeys:[NSArray arrayWithObject:assetsDictionary], @"assets", metadataDictionary, @"metadata", nil];
 	NSDictionary *outerManifestDictionary = [NSDictionary dictionaryWithObjectsAndKeys:[NSArray arrayWithObject:innerManifestDictionary], @"items", nil];
 	NSLog(@"Manifest Created");
+  
+  BOOL createArchiveForiOS3 = [iOSLessThan4Checker state] == NSOnState;
 	
 	//create html file
 	NSString *templatePath = [[NSBundle mainBundle] pathForResource:@"index_template" ofType:@"html"];
@@ -229,19 +236,8 @@
 	htmlTemplateString = [htmlTemplateString stringByReplacingOccurrencesOfString:@"[BETA_PLIST]" withString:[NSString stringWithFormat:@"%@/%@", folderURLString, @"manifest.plist"]];
 	htmlTemplateString = [htmlTemplateString stringByReplacingOccurrencesOfString:@"[PROVISIONING]" withString:[NSString stringWithFormat:@"%@/%@", folderURLString, @"provisioning.mobileprovision"]];
 	htmlTemplateString = [htmlTemplateString stringByReplacingOccurrencesOfString:@"[ZIP_NAME]" withString:[NSString stringWithFormat:@"%@.zip", appNameString]];
-	
-	//Create Archived Version for 3.0 Apps
-	ZipArchive* zip = [[ZipArchive alloc] init];
-	NSString *tempZipPath = [NSTemporaryDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.zip", appNameString]];
-	[fileManager removeItemAtPath:tempZipPath error:nil];
-	BOOL ret = [zip CreateZipFile2:tempZipPath];
-	ret = [zip addFileToZip:[archiveIPAFilenameField stringValue] newname:[NSString stringWithFormat:@"%@.ipa", appNameString]];
-	ret = [zip addFileToZip:mobileProvisionFilePath newname:@"provisioning.mobileprovision"];
-	if(![zip CloseZipFile2]) {
-		NSLog(@"Error Creating 3.x Zip File");
-		success = NO;
-	}
-	[zip release];
+  htmlTemplateString = [htmlTemplateString stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"[%@]", kiOSLessThan4HTMLToken]
+                                                                     withString:(createArchiveForiOS3 ? @"inline" : @"none")];
 	
 	
 	NSString *savePath = [NSHomeDirectory() stringByAppendingFormat:@"/Dropbox/Public/AdHoc/%@/%@", appNameString, nowString];
@@ -249,14 +245,30 @@
 	[fileManager createDirectoryAtPath:savePath withIntermediateDirectories:YES attributes:nil error:nil];
 	NSError *fileCopyError;
 	
-	//copy zip
-	NSURL *zipDestURL = [NSURL fileURLWithPath:[[saveDirectoryURL path] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.zip", appNameString]]];
-	NSURL *zipSourceURL = [NSURL fileURLWithPath:tempZipPath];
-	BOOL copiedZIPFile = [fileManager copyItemAtURL:zipSourceURL toURL:zipDestURL error:&fileCopyError];
-	if (!copiedZIPFile) {
-		NSLog(@"Error Copying ZIP File: %@", fileCopyError);
-		success = NO;
-	}		
+  if (createArchiveForiOS3)
+  {
+    //Create Archived Version for 3.0 Apps
+    ZipArchive* zip = [[ZipArchive alloc] init];
+    NSString *tempZipPath = [NSTemporaryDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.zip", appNameString]];
+    [fileManager removeItemAtPath:tempZipPath error:nil];
+    BOOL ret = [zip CreateZipFile2:tempZipPath];
+    ret = [zip addFileToZip:[archiveIPAFilenameField stringValue] newname:[NSString stringWithFormat:@"%@.ipa", appNameString]];
+    ret = [zip addFileToZip:mobileProvisionFilePath newname:@"provisioning.mobileprovision"];
+    if(![zip CloseZipFile2]) {
+      NSLog(@"Error Creating 3.x Zip File");
+      success = NO;
+    }
+    [zip release];
+    
+    //copy zip
+    NSURL *zipDestURL = [NSURL fileURLWithPath:[[saveDirectoryURL path] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.zip", appNameString]]];
+    NSURL *zipSourceURL = [NSURL fileURLWithPath:tempZipPath];
+    BOOL copiedZIPFile = [fileManager copyItemAtURL:zipSourceURL toURL:zipDestURL error:&fileCopyError];
+    if (!copiedZIPFile) {
+      NSLog(@"Error Copying ZIP File: %@", fileCopyError);
+      success = NO;
+    }		
+  }
 	
 	//Write Files
 	[outerManifestDictionary writeToURL:[saveDirectoryURL URLByAppendingPathComponent:@"manifest.plist"] atomically:YES];
@@ -343,6 +355,15 @@
 		[alert beginSheetModalForWindow:[[NSApplication sharedApplication] mainWindow] modalDelegate:nil didEndSelector:nil contextInfo:nil];
 	}
 
+}
+
+#pragma mark -
+#pragma mark iOS version
+
+- (void)checkediOSLessThan4Button:(id)sender
+{
+  BOOL checked = [iOSLessThan4Checker state] == NSOnState;
+  [[NSUserDefaults standardUserDefaults] setBool:checked forKey:kiOSLessThan4Key];
 }
 
 #pragma mark DBRestClient methods

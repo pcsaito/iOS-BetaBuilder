@@ -50,6 +50,7 @@
 	IBOutlet NSTextField *accountNameTextField;
 	IBOutlet NSTextField *quotaTextField;
 	IBOutlet NSButton *sameAccountChecker;
+  IBOutlet NSButton *iOSLessThan4Checker;
 
 
 	NSString *mobileProvisionFilePath;
@@ -75,6 +76,7 @@
 - (IBAction)loginOkAction:(id)sender;
 - (void)noDBError;
 - (IBAction)copyToPasteBoard:(id)sender;
+- (IBAction)checkediOSLessThan4Button:(id)sender;
 
 - (void)setupFromIPAFile:(NSString *)ipaFilename;
 - (void)setupFromAPPFile:(NSString *)appFilename;
