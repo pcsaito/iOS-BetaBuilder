@@ -203,7 +203,7 @@
 	NSFileManager *fileManager = [NSFileManager defaultManager];
 	BOOL success = YES;
 	
-	NSString *appNameString = [bundleNameField stringValue];
+	NSString *appNameString = [[bundleNameField stringValue] lossyString];
 	appNameString = [appNameString stringByReplacingOccurrencesOfString:@" " withString:@"_"];
 
 	//create plist
@@ -354,7 +354,6 @@
 		NSAlert *alert = [NSAlert alertWithMessageText:@"No Account Linked!" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@"Please check your usernamer or password!"];
 		[alert beginSheetModalForWindow:[[NSApplication sharedApplication] mainWindow] modalDelegate:nil didEndSelector:nil contextInfo:nil];
 	}
-
 }
 
 #pragma mark -
