@@ -39,19 +39,25 @@
 	NSTextField *bundleNameField;
 	NSTextField *webserverDirectoryField;
 	NSTextField *archiveIPAFilenameField;
+  NSTextField *deploymentURLField;
 	
 	NSButton *generateFilesButton;
 	IBOutlet NSButton *dbLinkButton;
 	IBOutlet NSButton *clipBoardChecker;
 	
-	IBOutlet NSWindow *dbLoginView; 
+	IBOutlet NSWindow *dbLoginView;
 	IBOutlet NSTextField *userNameTextField;
 	IBOutlet NSTextField *passNameTextField;
 	IBOutlet NSTextField *accountNameTextField;
 	IBOutlet NSTextField *quotaTextField;
 	IBOutlet NSButton *sameAccountChecker;
   IBOutlet NSButton *iOSLessThan4Checker;
-
+  
+  IBOutlet NSWindow *customizeHTMLWindow;
+  IBOutlet NSTextView *customWhatsNewField;
+  IBOutlet NSButton *customWhatsNewChecker;
+  IBOutlet NSButton *customRequireFreshInstallChecker;
+  NSString *customizedHTML;
 
 	NSString *mobileProvisionFilePath;
 	
@@ -65,10 +71,12 @@
 @property (nonatomic, retain) IBOutlet NSTextField *bundleNameField;
 @property (nonatomic, retain) IBOutlet NSTextField *webserverDirectoryField;
 @property (nonatomic, retain) IBOutlet NSTextField *archiveIPAFilenameField;
+@property (nonatomic, retain) IBOutlet NSTextField *deploymentURLField;
 
 @property (nonatomic, retain) IBOutlet NSButton *generateFilesButton;
 
 @property (nonatomic, copy) NSString *mobileProvisionFilePath;
+@property (nonatomic, copy) NSString *customizedHTML;
 
 - (IBAction)specifyIPAFile:(id)sender;
 - (IBAction)generateFiles:(id)sender;
@@ -77,6 +85,9 @@
 - (void)noDBError;
 - (IBAction)copyToPasteBoard:(id)sender;
 - (IBAction)checkediOSLessThan4Button:(id)sender;
+- (IBAction)pressedCustomizeHTML:(id)sender;
+- (IBAction)doneCustomizingHTML:(id)sender;
+- (IBAction)checkedCustomWhatsNewButton:(id)sender;
 
 - (void)setupFromIPAFile:(NSString *)ipaFilename;
 - (void)setupFromAPPFile:(NSString *)appFilename;

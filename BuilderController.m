@@ -32,9 +32,13 @@
 #import "BuilderController.h"
 #import "ZipArchive.h"
 #import "DBSession.h"
+#import "BetaBuilderAppDelegate.h"
+#import "DBAccountInfo.h"
+#import "NSString+Lossy.h"
 
 #define kiOSLessThan4Key @"iOSLessThan4"
 #define kiOSLessThan4HTMLToken @"DISPLAY_IOS_LESS_THAN_4"
+#define kCustomizedHTML @"CUSTOM_HTML"
 
 @implementation BuilderController
 
@@ -45,6 +49,8 @@
 @synthesize archiveIPAFilenameField;
 @synthesize generateFilesButton;
 @synthesize mobileProvisionFilePath;
+@synthesize deploymentURLField;
+@synthesize customizedHTML;
 
 - (id) init {
 	self = [super init];
@@ -60,6 +66,8 @@
 		restClient = [[DBRestClient alloc] initWithSession:session];
         restClient.delegate = self;
 		[restClient loadAccountInfo];
+    
+    self.customizedHTML = @"";
 	}
 	return self;
 }
@@ -238,6 +246,8 @@
 	htmlTemplateString = [htmlTemplateString stringByReplacingOccurrencesOfString:@"[ZIP_NAME]" withString:[NSString stringWithFormat:@"%@.zip", appNameString]];
   htmlTemplateString = [htmlTemplateString stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"[%@]", kiOSLessThan4HTMLToken]
                                                                      withString:(createArchiveForiOS3 ? @"inline" : @"none")];
+  htmlTemplateString = [htmlTemplateString stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"[%@]", kCustomizedHTML]
+                                                                     withString:customizedHTML];
 	
 	
 	NSString *savePath = [NSHomeDirectory() stringByAppendingFormat:@"/Dropbox/Public/AdHoc/%@/%@", appNameString, nowString];
@@ -294,6 +304,7 @@
 		NSSound *systemSound = [NSSound soundNamed:@"Glass"];
 		[systemSound play];
 		clipBoardLink = htmlURLString;
+    [deploymentURLField setStringValue:clipBoardLink];
 		[self copyToPasteBoard:self];
 	} else {
 		NSAlert *alert = [NSAlert alertWithMessageText:@"Error" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@"An error occurred!"];
@@ -365,6 +376,67 @@
   [[NSUserDefaults standardUserDefaults] setBool:checked forKey:kiOSLessThan4Key];
 }
 
+#pragma mark -
+#pragma mark HTML customization
+
+- (void)pressedCustomizeHTML:(id)sender
+{
+  [customizeHTMLWindow makeKeyAndOrderFront:nil];
+}
+
+- (void)checkedCustomWhatsNewButton:(id)sender
+{
+  NSButton *checker = sender;
+  NSColor *colour = [sender state] ? [NSColor blackColor] : [NSColor grayColor];
+  [customWhatsNewField setEditable:[checker state]];
+  [customWhatsNewField setTextColor:colour];
+}
+
+- (void)doneCustomizingHTML:(id)sender
+{
+  NSMutableString *html = [NSMutableString string];
+  
+  if ([customRequireFreshInstallChecker state])
+    [html appendString:@"<p class=\"important\">Remove the previous app from your device before installing this version!</p>\n"];
+  
+  if ([customWhatsNewChecker state])
+  {
+    [html appendString:@"<h4>What's new in this version</h4>\n"];
+    
+    NSMutableArray *lines = [NSMutableArray arrayWithArray:[[customWhatsNewField string] componentsSeparatedByString:@"\n"]];
+    [lines filterUsingPredicate:[NSPredicate predicateWithFormat:@"length > 0"]];
+    
+    if ([lines count])
+    {
+      NSString *line = [lines objectAtIndex:0];
+      if ([line hasPrefix:@"{"] && [line hasSuffix:@"}"])
+      {
+        NSRange range;
+        range.length = [line length] - 2;
+        range.location = 1;
+        [html appendFormat:@"<p><strong>%@</strong></p>\n", [line substringWithRange:range]];
+        [lines removeObjectAtIndex:0];
+      }
+    }
+    
+    if ([lines count])
+    {
+      [html appendString:@"<ul>\n"];
+      for (NSString *line in lines)
+      {
+        [html appendFormat:@"\t<li>%@</li>\n", line];
+      }
+      [html appendString:@"</ul>\n"];
+    }
+    
+  }
+  
+  self.customizedHTML = html;
+  
+  [customizeHTMLWindow close];
+}
+
+#pragma mark -
 #pragma mark DBRestClient methods
 
 - (void)restClientDidLogin:(DBRestClient*)client {
