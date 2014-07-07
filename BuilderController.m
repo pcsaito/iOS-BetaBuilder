@@ -32,6 +32,13 @@
 #import "BuilderController.h"
 #import "ZipArchive.h"
 #import "DBSession.h"
+#import "BetaBuilderAppDelegate.h"
+#import "DBAccountInfo.h"
+#import "NSString+Lossy.h"
+
+#define kiOSLessThan4Key @"iOSLessThan4"
+#define kiOSLessThan4HTMLToken @"DISPLAY_IOS_LESS_THAN_4"
+#define kCustomizedHTML @"CUSTOM_HTML"
 
 @implementation BuilderController
 
@@ -42,6 +49,8 @@
 @synthesize archiveIPAFilenameField;
 @synthesize generateFilesButton;
 @synthesize mobileProvisionFilePath;
+@synthesize deploymentURLField;
+@synthesize customizedHTML;
 
 - (id) init {
 	self = [super init];
@@ -57,6 +66,8 @@
 		restClient = [[DBRestClient alloc] initWithSession:session];
         restClient.delegate = self;
 		[restClient loadAccountInfo];
+    
+    self.customizedHTML = @"";
 	}
 	return self;
 }
@@ -64,6 +75,8 @@
 - (void) awakeFromNib {
 	if ([[DBSession sharedSession] isLinked])
 	[dbLinkButton setTitle:@"Unlink"];
+  
+  [iOSLessThan4Checker setState:[[NSUserDefaults standardUserDefaults] boolForKey:kiOSLessThan4Key] ? NSOnState : NSOffState];
 }
 
 - (IBAction)specifyIPAFile:(id)sender {
@@ -221,6 +234,8 @@
 	NSDictionary *innerManifestDictionary = [NSDictionary dictionaryWithObjectsAndKeys:[NSArray arrayWithObject:assetsDictionary], @"assets", metadataDictionary, @"metadata", nil];
 	NSDictionary *outerManifestDictionary = [NSDictionary dictionaryWithObjectsAndKeys:[NSArray arrayWithObject:innerManifestDictionary], @"items", nil];
 	NSLog(@"Manifest Created");
+  
+  BOOL createArchiveForiOS3 = [iOSLessThan4Checker state] == NSOnState;
 	
 	//create html file
 	NSString *templatePath = [[NSBundle mainBundle] pathForResource:@"index_template" ofType:@"html"];
@@ -229,19 +244,10 @@
 	htmlTemplateString = [htmlTemplateString stringByReplacingOccurrencesOfString:@"[BETA_PLIST]" withString:[NSString stringWithFormat:@"%@/%@", folderURLString, @"manifest.plist"]];
 	htmlTemplateString = [htmlTemplateString stringByReplacingOccurrencesOfString:@"[PROVISIONING]" withString:[NSString stringWithFormat:@"%@/%@", folderURLString, @"provisioning.mobileprovision"]];
 	htmlTemplateString = [htmlTemplateString stringByReplacingOccurrencesOfString:@"[ZIP_NAME]" withString:[NSString stringWithFormat:@"%@.zip", appNameString]];
-	
-	//Create Archived Version for 3.0 Apps
-	ZipArchive* zip = [[ZipArchive alloc] init];
-	NSString *tempZipPath = [NSTemporaryDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.zip", appNameString]];
-	[fileManager removeItemAtPath:tempZipPath error:nil];
-	BOOL ret = [zip CreateZipFile2:tempZipPath];
-	ret = [zip addFileToZip:[archiveIPAFilenameField stringValue] newname:[NSString stringWithFormat:@"%@.ipa", appNameString]];
-	ret = [zip addFileToZip:mobileProvisionFilePath newname:@"provisioning.mobileprovision"];
-	if(![zip CloseZipFile2]) {
-		NSLog(@"Error Creating 3.x Zip File");
-		success = NO;
-	}
-	[zip release];
+  htmlTemplateString = [htmlTemplateString stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"[%@]", kiOSLessThan4HTMLToken]
+                                                                     withString:(createArchiveForiOS3 ? @"inline" : @"none")];
+  htmlTemplateString = [htmlTemplateString stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"[%@]", kCustomizedHTML]
+                                                                     withString:customizedHTML];
 	
 	
 	NSString *savePath = [NSHomeDirectory() stringByAppendingFormat:@"/Dropbox/Public/AdHoc/%@/%@", appNameString, nowString];
@@ -249,14 +255,30 @@
 	[fileManager createDirectoryAtPath:savePath withIntermediateDirectories:YES attributes:nil error:nil];
 	NSError *fileCopyError;
 	
-	//copy zip
-	NSURL *zipDestURL = [NSURL fileURLWithPath:[[saveDirectoryURL path] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.zip", appNameString]]];
-	NSURL *zipSourceURL = [NSURL fileURLWithPath:tempZipPath];
-	BOOL copiedZIPFile = [fileManager copyItemAtURL:zipSourceURL toURL:zipDestURL error:&fileCopyError];
-	if (!copiedZIPFile) {
-		NSLog(@"Error Copying ZIP File: %@", fileCopyError);
-		success = NO;
-	}		
+  if (createArchiveForiOS3)
+  {
+    //Create Archived Version for 3.0 Apps
+    ZipArchive* zip = [[ZipArchive alloc] init];
+    NSString *tempZipPath = [NSTemporaryDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.zip", appNameString]];
+    [fileManager removeItemAtPath:tempZipPath error:nil];
+    BOOL ret = [zip CreateZipFile2:tempZipPath];
+    ret = [zip addFileToZip:[archiveIPAFilenameField stringValue] newname:[NSString stringWithFormat:@"%@.ipa", appNameString]];
+    ret = [zip addFileToZip:mobileProvisionFilePath newname:@"provisioning.mobileprovision"];
+    if(![zip CloseZipFile2]) {
+      NSLog(@"Error Creating 3.x Zip File");
+      success = NO;
+    }
+    [zip release];
+    
+    //copy zip
+    NSURL *zipDestURL = [NSURL fileURLWithPath:[[saveDirectoryURL path] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.zip", appNameString]]];
+    NSURL *zipSourceURL = [NSURL fileURLWithPath:tempZipPath];
+    BOOL copiedZIPFile = [fileManager copyItemAtURL:zipSourceURL toURL:zipDestURL error:&fileCopyError];
+    if (!copiedZIPFile) {
+      NSLog(@"Error Copying ZIP File: %@", fileCopyError);
+      success = NO;
+    }		
+  }
 	
 	//Write Files
 	[outerManifestDictionary writeToURL:[saveDirectoryURL URLByAppendingPathComponent:@"manifest.plist"] atomically:YES];
@@ -282,6 +304,7 @@
 		NSSound *systemSound = [NSSound soundNamed:@"Glass"];
 		[systemSound play];
 		clipBoardLink = htmlURLString;
+    [deploymentURLField setStringValue:clipBoardLink];
 		[self copyToPasteBoard:self];
 	} else {
 		NSAlert *alert = [NSAlert alertWithMessageText:@"Error" defaultButton:@"OK" alternateButton:nil otherButton:nil informativeTextWithFormat:@"An error occurred!"];
@@ -344,6 +367,76 @@
 	}
 }
 
+#pragma mark -
+#pragma mark iOS version
+
+- (void)checkediOSLessThan4Button:(id)sender
+{
+  BOOL checked = [iOSLessThan4Checker state] == NSOnState;
+  [[NSUserDefaults standardUserDefaults] setBool:checked forKey:kiOSLessThan4Key];
+}
+
+#pragma mark -
+#pragma mark HTML customization
+
+- (void)pressedCustomizeHTML:(id)sender
+{
+  [customizeHTMLWindow makeKeyAndOrderFront:nil];
+}
+
+- (void)checkedCustomWhatsNewButton:(id)sender
+{
+  NSButton *checker = sender;
+  NSColor *colour = [sender state] ? [NSColor blackColor] : [NSColor grayColor];
+  [customWhatsNewField setEditable:[checker state]];
+  [customWhatsNewField setTextColor:colour];
+}
+
+- (void)doneCustomizingHTML:(id)sender
+{
+  NSMutableString *html = [NSMutableString string];
+  
+  if ([customRequireFreshInstallChecker state])
+    [html appendString:@"<p class=\"important\">Remove the previous app from your device before installing this version!</p>\n"];
+  
+  if ([customWhatsNewChecker state])
+  {
+    [html appendString:@"<h4>What's new in this version</h4>\n"];
+    
+    NSMutableArray *lines = [NSMutableArray arrayWithArray:[[customWhatsNewField string] componentsSeparatedByString:@"\n"]];
+    [lines filterUsingPredicate:[NSPredicate predicateWithFormat:@"length > 0"]];
+    
+    if ([lines count])
+    {
+      NSString *line = [lines objectAtIndex:0];
+      if ([line hasPrefix:@"{"] && [line hasSuffix:@"}"])
+      {
+        NSRange range;
+        range.length = [line length] - 2;
+        range.location = 1;
+        [html appendFormat:@"<p><strong>%@</strong></p>\n", [line substringWithRange:range]];
+        [lines removeObjectAtIndex:0];
+      }
+    }
+    
+    if ([lines count])
+    {
+      [html appendString:@"<ul>\n"];
+      for (NSString *line in lines)
+      {
+        [html appendFormat:@"\t<li>%@</li>\n", line];
+      }
+      [html appendString:@"</ul>\n"];
+    }
+    
+  }
+  
+  self.customizedHTML = html;
+  
+  [customizeHTMLWindow close];
+}
+
+#pragma mark -
 #pragma mark DBRestClient methods
 
 - (void)restClientDidLogin:(DBRestClient*)client {
